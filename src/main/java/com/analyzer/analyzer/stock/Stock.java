@@ -1,7 +1,7 @@
 package com.analyzer.analyzer.stock;
 
 import com.analyzer.analyzer.prediction.Prediction;
-import com.analyzer.analyzer.user.UserStockInterest;
+import com.analyzer.analyzer.user.interest.UserStockInterest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

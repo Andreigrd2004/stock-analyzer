@@ -1,6 +1,7 @@
-package com.analyzer.analyzer.user;
+package com.analyzer.analyzer.user.interest;
 
 import com.analyzer.analyzer.stock.Stock;
+import com.analyzer.analyzer.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

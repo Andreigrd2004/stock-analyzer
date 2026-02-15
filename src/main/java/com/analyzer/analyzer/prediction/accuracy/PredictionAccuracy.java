@@ -1,5 +1,6 @@
-package com.analyzer.analyzer.prediction;
+package com.analyzer.analyzer.prediction.accuracy;
 
+import com.analyzer.analyzer.prediction.Prediction;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

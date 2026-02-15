@@ -1,5 +1,6 @@
 package com.analyzer.analyzer.prediction;
 
+import com.analyzer.analyzer.prediction.accuracy.PredictionAccuracy;
 import com.analyzer.analyzer.stock.Stock;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;

@@ -1,4 +1,4 @@
-package com.analyzer.analyzer.user;
+package com.analyzer.analyzer.user.interest;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

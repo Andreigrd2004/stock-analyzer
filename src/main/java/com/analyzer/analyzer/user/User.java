@@ -1,5 +1,6 @@
 package com.analyzer.analyzer.user;
 
+import com.analyzer.analyzer.user.interest.UserStockInterest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
