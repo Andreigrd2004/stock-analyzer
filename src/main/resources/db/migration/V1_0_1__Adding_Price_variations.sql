@@ -9,10 +9,9 @@ create table price_variations (
     price_ytd DOUBLE PRECISION,
     price_before_1_year DOUBLE PRECISION,
     price_before_3_years DOUBLE PRECISION,
-    price_before_3_years DOUBLE PRECISION,
     price_before_5_years DOUBLE PRECISION,
     price_before_10_years DOUBLE PRECISION,
 
 
-    CONSTRAINT fk_prediction FOREIGN KEY (prediction_id) REFERENCES predictions (id)
+    CONSTRAINT fk_stock FOREIGN KEY (stock_id) REFERENCES stocks (id)
 )

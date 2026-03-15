@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
-public class StockDTO {
-    private String c;
+public class NewsListDTO {
+    List<NewsDTO> newsList;
 }
