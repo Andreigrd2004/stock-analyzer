@@ -4,18 +4,19 @@ import com.analyzer.analyzer.stock.DTO.NewsDTO;
 import com.analyzer.analyzer.stock.DTO.StockDTO;
 import java.util.List;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping("/stocks")
 @Validated
 public class StockController {
-    private StockService stockService;
+    private final StockService stockService;
+    private final StockDataImportService stockDataImportService;
 
     @GetMapping("/stock-data")
     public StockDTO getStockData(@RequestParam(defaultValue = "AAPL") String symbol) {
@@ -40,5 +41,16 @@ public class StockController {
     @GetMapping("/prediction")
     public String getPrediction(@RequestParam(defaultValue = "AAPL") String symbol) {
         return stockService.getPrediction(symbol);
+    }
+
+    @GetMapping("/price-variation")
+    public String getPriceVariation(@RequestParam(defaultValue = "AAPL") String symbol) {
+        return stockService.getPriceVariation(symbol);
+    }
+
+    @PostMapping(value = "/import-archive", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> importArchive(@RequestParam("file") MultipartFile file) {
+        stockDataImportService.importFromFile(file);
+        return ResponseEntity.ok("Import triggered for file: " + file.getOriginalFilename());
     }
 }

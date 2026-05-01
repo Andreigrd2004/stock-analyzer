@@ -11,4 +11,5 @@ public interface StockService {
     List<NewsDTO> getNews(String stockSymbol);
     String getInsiderSentiment(String stockSymbol);
     String getPrediction(String stockSymbol);
+    String getPriceVariation(String stockSymbol);
 }

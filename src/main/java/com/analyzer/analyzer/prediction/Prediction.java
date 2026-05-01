@@ -4,7 +4,9 @@ import com.analyzer.analyzer.prediction.accuracy.PredictionAccuracy;
 import com.analyzer.analyzer.stock.Stock;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -15,7 +17,9 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@AllArgsConstructor
 @Table(name = "predictions", schema = "public")
+@NoArgsConstructor
 public class Prediction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

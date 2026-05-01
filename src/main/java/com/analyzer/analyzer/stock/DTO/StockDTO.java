@@ -9,4 +9,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class StockDTO {
     private String c;
+    private String h;
+    private String l;
+    private String o;
+    private String pc;
+
 }

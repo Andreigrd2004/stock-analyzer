@@ -1,5 +1,7 @@
 package com.analyzer.analyzer.security;
 
+import com.analyzer.analyzer.security.jwt.JwtAuthenticationEntryPoint;
+import com.analyzer.analyzer.security.jwt.JwtAuthenticationFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,9 +11,11 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -19,18 +23,42 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebSecurity
 @AllArgsConstructor
 public class SecurityConfig {
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable);
         http.cors(Customizer.withDefaults());
-        http.formLogin(AbstractHttpConfigurer::disable);
-        http.logout(AbstractHttpConfigurer::disable);
-        http.authorizeHttpRequests(authorizeRequests ->
-                authorizeRequests.anyRequest().permitAll());
+        http.formLogin(withDefaults());
+        http.logout(withDefaults());
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.authorizeHttpRequests(
+                authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers("/auth/**")
+                                .permitAll()
+                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
+                                .permitAll()
+                                .requestMatchers("/users/**")
+                                .hasRole("API")
+                                .requestMatchers("/admin/**", "/csv/**")
+                                .hasRole("ADMIN")
+                                .anyRequest()
+                                .authenticated());
+
+        http.exceptionHandling(
+                exception -> exception.authenticationEntryPoint(jwtAuthenticationEntryPoint));
+
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 

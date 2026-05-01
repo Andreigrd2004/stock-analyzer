@@ -52,7 +52,7 @@ public class GeminiPredictionService {
         this.chatModel = chatModel;
     }
 
-    public String generateStockAnalysis(String symbol, String quote, String news, String insiderSentiment, String history) {
+    public String generateStockAnalysis(String symbol, String quote, String news, String insiderSentiment, String history, String pricePredictionByModel) {
         String userPrompt = String.format("""
                 Analyze the stock: %s
                 
@@ -69,9 +69,12 @@ public class GeminiPredictionService {
                 
                 HISTORICAL EVOLUTION:
                 %s
+                
+                PRICE PREDICTED BY MY MODEL:
+                %s
 
                 GENERATE PREDICTION JSON NOW.
-                """, symbol, quote, news, insiderSentiment, history);
+                """, symbol, quote, news, insiderSentiment, history, pricePredictionByModel);
         SystemMessage systemMessage = new SystemMessage(SYSTEM_INSTRUCTION);
         UserMessage userMessage = new UserMessage(userPrompt);
         Prompt prompt = new Prompt(List.of(systemMessage, userMessage));

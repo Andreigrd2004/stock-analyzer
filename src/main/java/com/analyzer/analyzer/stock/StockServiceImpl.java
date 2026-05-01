@@ -1,6 +1,9 @@
 package com.analyzer.analyzer.stock;
 
+import com.analyzer.analyzer.prediction.Prediction;
+import com.analyzer.analyzer.prediction.PredictionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.analyzer.analyzer.prediction.gemini.GeminiPredictionService;
 import com.analyzer.analyzer.price_variation.PriceVariationService;
@@ -9,6 +12,7 @@ import com.analyzer.analyzer.stock.DTO.InsiderSentimentDTO;
 import com.analyzer.analyzer.stock.DTO.NewsDTO;
 import com.analyzer.analyzer.stock.DTO.StockDTO;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +30,7 @@ public class StockServiceImpl implements StockService {
     private final PriceVariationService priceVariationService;
     private final GeminiPredictionService geminiPredictionService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final PredictionRepository predictionRepository;
 
     @Value("${app.finnhub-api-key}")
     private String apiKey;
@@ -40,14 +45,33 @@ public class StockServiceImpl implements StockService {
 
     public String getPrediction(String stockSymbol) {
         try {
+            if(predictionRepository.existsPredictionByStock(stockRepository.getStockBySymbol(stockSymbol))){
+                return predictionRepository.getPredictionByStock(stockRepository.getStockBySymbol(stockSymbol));
+            }
             String quote = getQuote(stockSymbol);
             String news = objectMapper.writeValueAsString(getNews(stockSymbol));
             String sentiment = getInsiderSentiment(stockSymbol);
             String priceChange = getPriceVariation(stockSymbol);
-            return geminiPredictionService.generateStockAnalysis(stockSymbol, quote, news, sentiment, priceChange);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize stock data to JSON", e);
+            String pricePredictionByModel = getPricePrediction(stockSymbol);
+            String response = geminiPredictionService.generateStockAnalysis(stockSymbol, quote, news, sentiment, priceChange, pricePredictionByModel);
+            savePrediction(stockSymbol, response, quote);
+            } catch(JsonProcessingException e){
+                throw new RuntimeException("Failed to serialize stock data to JSON", e);
+            }
+        return stockSymbol;
+    }
+
+    public String getPricePrediction(String stockSymbol) {
+        RestTemplate restTemplate = new RestTemplate();
+        String url = "http://localhost:5000/api/v1/predictions/price?ticker=" + stockSymbol;
+        Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+
+        Object predictedPrice = response != null ? response.get("predictedPrice") : null;
+        if (predictedPrice == null) {
+            throw new IllegalStateException("Prediction response is missing 'predictedPrice'");
         }
+
+        return String.valueOf(predictedPrice);
     }
 
     public String getQuote(String stockSymbol) {
@@ -116,8 +140,30 @@ public class StockServiceImpl implements StockService {
                 data.size()
         );
     }
-    private String getPriceVariation(String stockSymbol) {
+    public String getPriceVariation(String stockSymbol) {
         return priceVariationService.getPriceChange(stockSymbol);
+    }
+
+    private void savePrediction(String stockSymbol, String response, String quote) throws JsonProcessingException {
+        JsonNode rootNode = objectMapper.readTree(response);
+        int shortTermScore = rootNode.path("short_term").path("score").asInt();
+        String action = switch (shortTermScore) {
+            case 0 -> "Sell";
+            case 1 -> "Hold";
+            case 2 -> "Buy";
+            default -> throw new IllegalStateException("Unexpected value: " + shortTermScore);
+        };
+        Stock stock;
+        if (stockRepository.existsBySymbol(stockSymbol)) {
+            stock = stockRepository.getStockBySymbol(stockSymbol);
+        } else {
+            Stock newStock = new Stock();
+            newStock.setSymbol(stockSymbol);
+            stockRepository.save(newStock);
+            stock = newStock;
+        }
+        Prediction prediction = new Prediction(null, stock, response, action, Double.parseDouble(quote), java.time.Instant.now(), java.time.Instant.now().plus(1, ChronoUnit.DAYS), new java.util.LinkedHashSet<>());
+        predictionRepository.save(prediction);
     }
 
 }
